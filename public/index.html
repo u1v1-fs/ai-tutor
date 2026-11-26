@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Tutor</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4338ca" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="bismillahRibbon" dir="rtl" aria-label="A'udhu billahi min ash-shaytanir rajim, Bismillahir Rahmanir Raheem">
+      <div class="bis-text">
+        <span>أَعُوْذُ بِاللهِ مِنَ الشَّيْطٰنِ الرَّجِيْمِ</span>
+        <span class="bis-med">۝</span>
+        <span>بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</span>
+      </div>
+      <div class="bis-latin">A'ūdhu billāhi min ash-shayṭānir rajīm &nbsp;·&nbsp; Bismillāhir Raḥmānir Raḥīm</div>
+      <div class="bis-particles" id="bisParticles" aria-hidden="true"></div>
+    </div>
+
+    <header>
+      <div class="brand">
+        <img class="logo" src="/logo.png" alt="logo" />
+        <span>AI Tutor</span>
+      </div>
+      <div class="head-right">
+        <select id="modelSel" title="AI model" aria-label="AI model"></select>
+        <span class="pill" id="providerPill">checking…</span>
+        <button class="btn ghost icon" id="refreshBtn" type="button" title="Check which free models are available right now (auto-switch if rate-limited)">↻</button>
+        <button class="btn ghost icon" id="settingsBtn" type="button" title="Settings">⚙</button>
+        <button class="btn ghost" id="voiceBtn" type="button">🔇 Voice off</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="content">
+        <nav class="tabs">
+          <button class="tab on" data-tab="chat" type="button">Chat</button>
+          <button class="tab" data-tab="library" type="button">Library</button>
+          <button class="tab" data-tab="present" type="button">Present</button>
+          <button class="tab" data-tab="robotics" type="button">Curriculum</button>
+          <button class="tab" data-tab="quiz" type="button">Quiz me</button>
+          <button class="tab" data-tab="review" type="button">Review</button>
+          <span class="tab-sep" aria-hidden="true"></span>
+          <button class="tab" data-tab="marking" type="button">Marking</button>
+          <button class="tab" data-tab="progress" type="button">Progress</button>
+          <button class="btn ghost push" id="newChat" type="button" title="Clear history and start fresh">＋ New chat</button>
+        </nav>
+
+        <!-- chat -->
+        <section class="view on" id="view-chat">
+          <input id="chatSearch" placeholder="🔍 Search chat history…" autocomplete="off" />
+          <div class="chatlog" id="chatLog">
+            <div class="empty">
+              Upload notes or a PDF, then ask anything about them.
+              <br /><small>Answers cite the passages they came from.</small>
+            </div>
+          </div>
+          <form class="askbar" id="askForm">
+            <button class="btn ghost icon" id="micBtn" type="button" title="Speak your question">🎤</button>
+            <button class="btn ghost icon" id="spellBtn" type="button" title="Fix spelling">✓</button>
+            <input id="askInput" placeholder="Ask about your material…" autocomplete="off" spellcheck="true" />
+            <button class="btn primary" type="submit">Ask</button>
+          </form>
+          <p class="hint voice-hint" id="voiceHint"></p>
+        </section>
+
+        <!-- library -->
+        <section class="view" id="view-library">
+          <div class="library-grid">
+            <div class="panel">
+              <h2>Documents</h2>
+              <label class="upload">
+                <input id="fileInput" type="file" accept=".pdf,.docx,.txt,.md" hidden />
+                <span class="btn primary">＋ Add PDF / Word / notes</span>
+              </label>
+              <p class="hint" id="uploadHint"></p>
+              <ul class="doclist" id="docList"></ul>
+              <label class="scope">
+                <input type="checkbox" id="scopeAll" checked />
+                <span>Use all documents</span>
+              </label>
+              <p class="mini" style="margin-top: 10px">
+                Click a document to make it active — chat, quizzes and flashcards then focus on it.
+              </p>
+            </div>
+            <div class="panel summary-panel">
+              <div class="summary" id="summaryCard" hidden></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- quiz -->
+        <section class="view" id="view-quiz">
+          <div class="panel">
+            <h2>New quiz</h2>
+            <form id="quizForm" class="quiz-form">
+              <select id="quizDoc"></select>
+              <select id="quizCount">
+                <option>3</option>
+                <option selected>5</option>
+                <option>8</option>
+                <option>10</option>
+              </select>
+              <button class="btn primary" type="submit">Generate</button>
+            </form>
+            <p class="hint" id="quizHint"></p>
+          </div>
+          <div id="quizArea"></div>
+
+          <div class="panel" style="margin-top: 16px">
+            <h2>Quiz from handwritten notes (OCR)</h2>
+            <p class="mini">
+              Photo of handwritten notes or a textbook page → it gets read and turned into a
+              multiple-choice quiz.
+            </p>
+            <form id="notesForm" class="quiz-form">
+              <select id="notesCount">
+                <option>3</option>
+                <option selected>5</option>
+                <option>8</option>
+              </select>
+              <label class="upload inline">
+                <input id="notesInput" type="file" accept="image/*" capture="environment" hidden />
+                <span class="btn ghost">📷 Notes photo</span>
+              </label>
+              <button class="btn primary" id="notesGo" type="submit">Make quiz</button>
+            </form>
+            <p class="hint" id="notesHint"></p>
+          </div>
+
+          <div class="panel" style="margin-top: 16px">
+            <h2>Check answer sheet (OCR)</h2>
+            <p class="mini">
+              Photo of a handwritten answer → it gets read (OCR) and graded out of 10 against
+              your material, with mistakes and the ideal answer.
+            </p>
+            <form id="sheetForm" class="quiz-form">
+              <input id="sheetQuestion" placeholder="The question that was asked (optional)" />
+              <label class="upload inline">
+                <input id="sheetInput" type="file" accept="image/*" capture="environment" hidden />
+                <span class="btn ghost">📷 Photo</span>
+              </label>
+              <button class="btn primary" id="sheetGo" type="submit">Grade</button>
+            </form>
+            <p class="hint" id="sheetHint"></p>
+            <div id="sheetResult"></div>
+          </div>
+        </section>
+
+        <!-- marking: class roster + handwritten answer sheets -->
+        <section class="view" id="view-marking">
+          <div class="panel">
+            <h2>Marking — handwritten answer sheets</h2>
+            <p class="mini">
+              Add each student with the photo(s) of their scanned answer sheet — as many
+              pages as needed. The AI reads the handwriting (OCR), finds every question and
+              marks it with feedback. No answer key needed.
+            </p>
+            <form id="markForm" class="quiz-form">
+              <input id="markName" placeholder="Student name" autocomplete="off" />
+              <select id="markPerQ" title="Marks per question">
+                <option>5</option>
+                <option selected>10</option>
+                <option>20</option>
+              </select>
+              <label class="upload inline">
+                <input id="markFiles" type="file" accept="image/*" capture="environment" multiple hidden />
+                <span class="btn ghost">📷 Sheet photos</span>
+              </label>
+              <button class="btn primary" type="submit">Add student</button>
+            </form>
+            <p class="hint" id="markHint"></p>
+            <ul class="mark-list" id="markList"></ul>
+          </div>
+        </section>
+
+        <!-- flashcards -->
+        <section class="view" id="view-review">
+          <div class="panel">
+            <h2>Flashcards</h2>
+            <form id="fcForm" class="quiz-form">
+              <select id="fcDoc"></select>
+              <select id="fcCount">
+                <option>4</option>
+                <option selected>8</option>
+                <option>12</option>
+                <option>16</option>
+              </select>
+              <label class="check inline"><input type="checkbox" id="fcWeak" /> Focus on weak topics</label>
+              <button class="btn primary" type="submit">Generate</button>
+            </form>
+            <p class="hint" id="fcHint"></p>
+            <ul class="sessions" id="deckList"></ul>
+          </div>
+          <div id="fcStudy"></div>
+        </section>
+
+        <!-- video presentation -->
+        <section class="view" id="view-present">
+          <div class="panel">
+            <h2>Video presentation</h2>
+            <form id="presForm" class="quiz-form">
+              <input id="presTopic" placeholder="Topic — e.g. Photosynthesis (optional if a document is picked)" />
+              <select id="presDoc"></select>
+              <button class="btn primary" type="submit">Generate</button>
+            </form>
+            <p class="hint" id="presHint"></p>
+            <ul class="sessions" id="presList"></ul>
+          </div>
+          <div id="stage"></div>
+        </section>
+
+        <!-- curriculum -->
+        <section class="view" id="view-robotics">
+          <div class="curr-layout">
+            <aside class="panel curr-menu">
+              <h2>Curriculum tracks</h2>
+              <nav id="trackMenu" class="track-menu" aria-label="Curriculum tracks"></nav>
+            </aside>
+            <div class="panel curr-main">
+              <div class="curr-head">
+                <div>
+                  <h2 id="trackTitle">Curriculum</h2>
+                  <p class="hint" id="trackBlurb">Pick a track, level and topic, then generate a lesson or quiz.</p>
+                </div>
+              </div>
+              <div class="quiz-form">
+                <select id="robLevel" aria-label="Level"></select>
+                <select id="robTopic" aria-label="Topic"></select>
+                <button class="btn primary" id="robLessonBtn" type="button">Generate lesson</button>
+                <button class="btn ghost" id="robQuizBtn" type="button">Quiz me</button>
+              </div>
+              <p class="hint" id="robHint"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- progress -->
+        <section class="view" id="view-progress">
+          <div class="cards">
+            <div class="card streak"><b id="pStreak">🔥 0</b><span>day streak</span></div>
+            <div class="card"><b id="pAcc">—</b><span>accuracy</span></div>
+            <div class="card"><b id="pAns">0</b><span>answers</span></div>
+            <div class="card"><b id="pQuiz">0</b><span>quizzes</span></div>
+          </div>
+          <div class="panel">
+            <h2>Today's revision</h2>
+            <div id="revisionCard" class="revision"><span class="mini">Loading…</span></div>
+          </div>
+          <div class="panel">
+            <h2>Badges</h2>
+            <div class="badges" id="badges"></div>
+          </div>
+          <div class="panel">
+            <h2>Topics</h2>
+            <table class="topics" id="topicTable"></table>
+            <p class="hint" id="progressHint"></p>
+            <div class="data-actions">
+              <button class="btn ghost" id="exportBtn" type="button">⬇ Export report (PDF)</button>
+              <button class="btn ghost" id="resetProgress" type="button">Reset progress</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>Recent sessions</h2>
+            <ul class="sessions" id="sessionList"></ul>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div class="modal" id="settingsModal" hidden>
+      <div class="modal-backdrop" data-close></div>
+      <div class="modal-card" role="dialog" aria-label="Settings">
+        <div class="modal-head">
+          <h2>Settings</h2>
+          <button class="btn ghost icon" id="settingsClose" type="button" title="Close">✕</button>
+        </div>
+
+        <section class="set-sec">
+          <h3>Colour</h3>
+          <div class="swatches" id="accentSwatches"></div>
+          <label class="check"><input type="checkbox" id="darkMode" /> Dark mode</label>
+        </section>
+
+        <section class="set-sec">
+          <h3>Show / hide</h3>
+          <label class="check"><input type="checkbox" id="showLogo" /> Logo in header</label>
+          <label class="check"><input type="checkbox" id="showModel" /> Model picker</label>
+          <label class="check"><input type="checkbox" id="showSources" /> Sources under answers</label>
+          <label class="check"><input type="checkbox" id="showFooter" /> Footer credit</label>
+          <label class="check"><input type="checkbox" id="showRibbon" /> Bismillah ribbon</label>
+          <label class="check"><input type="checkbox" id="remindOn" /> Daily revision reminder</label>
+        </section>
+
+        <section class="set-sec">
+          <h3>Language</h3>
+          <select id="langSel" title="Language for answers">
+            <option value="en">English</option>
+            <option value="ur">اردو — Urdu</option>
+            <option value="hi">हिन्दी — Hindi</option>
+          </select>
+          <p class="mini">Answers, quizzes, slides and flashcards follow this language.</p>
+        </section>
+
+        <section class="set-sec">
+          <h3>Student profiles</h3>
+          <ul class="profiles" id="profileList"></ul>
+          <div class="data-actions">
+            <input id="newProfileName" placeholder="New profile name" maxlength="40" />
+            <button class="btn ghost" id="addProfileBtn" type="button">＋ Add</button>
+          </div>
+          <p class="hint" id="profileHint"></p>
+        </section>
+
+        <section class="set-sec">
+          <h3>Voice</h3>
+          <select id="voiceSel" title="Speaking voice"></select>
+          <label class="range">
+            <span>Speed</span>
+            <input type="range" id="voiceRate" min="0.6" max="1.6" step="0.1" value="1" />
+            <b id="rateVal">1×</b>
+          </label>
+          <button class="btn ghost" id="voiceTest" type="button">▶ Test voice</button>
+        </section>
+
+        <section class="set-sec">
+          <h3>License</h3>
+          <div class="device-row">
+            <code id="settingsDeviceId">…</code>
+            <button class="btn ghost" id="copySettingsDevice" type="button">Copy</button>
+          </div>
+          <p class="hint" id="licenseHint"></p>
+        </section>
+
+        <section class="set-sec">
+          <h3>Data</h3>
+          <div class="data-actions">
+            <button class="btn ghost" id="backupBtn" type="button">⬇ Backup everything</button>
+            <button class="btn ghost" id="restoreBtn" type="button">⬆ Restore backup</button>
+            <button class="btn ghost" id="clearChatBtn" type="button">Clear chat history</button>
+            <button class="btn ghost danger" id="deleteDocsBtn" type="button">Delete all documents</button>
+            <button class="btn ghost danger" id="resetProgressBtn" type="button">Reset progress</button>
+          </div>
+          <input type="file" id="restoreInput" accept=".json,application/json" hidden />
+          <p class="hint" id="dataHint"></p>
+          <h3>Saved backups (newest first)</h3>
+          <ul class="sessions backups" id="backupList"></ul>
+        </section>
+      </div>
+    </div>
+
+    <div id="printReport" hidden></div>
+
+    <!-- activation gate -->
+    <div id="activationGate" class="gate" hidden>
+      <div class="gate-card">
+        <h2>🔐 Activate AI Tutor</h2>
+        <p class="hint">This device needs an activation key. Send the Device ID below to your administrator and paste the key you receive.</p>
+        <label class="gate-label">Device ID</label>
+        <div class="device-row">
+          <code id="deviceId">…</code>
+          <button class="btn ghost" id="copyDevice" type="button">Copy</button>
+        </div>
+        <label class="gate-label">Activation key</label>
+        <input id="activationKey" placeholder="AK1-…" autocomplete="off" spellcheck="false" />
+        <button class="btn primary" id="activateBtn" type="button">Activate this device</button>
+        <p class="hint" id="activationHint"></p>
+        <p class="mini">Keys are single-use and tied to this Device ID. Expiry is set by the administrator.</p>
+      </div>
+    </div>
+
+    <footer id="foot"></footer>
+    <script src="/config.js"></script>
+    <script src="/app.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>
